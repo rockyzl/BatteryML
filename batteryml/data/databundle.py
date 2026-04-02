@@ -4,6 +4,8 @@
 import torch
 import pickle
 
+from typing import Dict, List, Optional, Union
+
 from batteryml.data.transformation.base import BaseDataTransformation
 
 
@@ -78,18 +80,78 @@ class DataBundle:
         return self.train_data.feature.device
 
     @torch.no_grad()
-    def evaluate(self, prediction: torch.Tensor, metric: str, data_type: str='test'):
+    def evaluate(
+        self,
+        prediction: torch.Tensor,
+        metric: Union[str, List[str]] = 'RMSE',
+        data_type: str = 'test',
+        metrics: Optional[List[str]] = None,
+    ) -> Union[float, Dict[str, float]]:
+        """Evaluate predictions against ground truth.
+
+        Args:
+            prediction: Model predictions.
+            metric: Single metric name (for backward compatibility).
+            data_type: 'test' or 'train'.
+            metrics: List of metric names. If provided, returns a dict
+                of {metric_name: score}. Supports new metrics from
+                batteryml.evaluation.metrics.
+
+        Returns:
+            float if a single metric string is used (backward compat),
+            Dict[str, float] if metrics list is provided.
+        """
         if data_type == 'train':
             target = self.train_data.label
         else:
             target = self.test_data.label
-            
-        # target = self.test_data.label
+
         if self.label_transformation is not None:
             target = self.label_transformation.inverse_transform(target)
             prediction = self.label_transformation.inverse_transform(prediction)
 
+        # New multi-metric path
+        if metrics is not None:
+            from batteryml.evaluation.metrics import get_metric
+            return {m: get_metric(m)(target, prediction) for m in metrics}
+
         return self._evaluate_score(target, prediction, metric)
+
+    @torch.no_grad()
+    def evaluate_all(
+        self,
+        prediction: torch.Tensor,
+        data_type: str = 'test',
+    ) -> Dict[str, float]:
+        """Evaluate predictions with all available metrics.
+
+        使用所有可用指标评估预测结果。
+
+        Args:
+            prediction: Model predictions.
+            data_type: 'test' or 'train'.
+
+        Returns:
+            Dict[str, float]: All metric scores.
+        """
+        from batteryml.evaluation.metrics import METRIC_REGISTRY
+
+        if data_type == 'train':
+            target = self.train_data.label
+        else:
+            target = self.test_data.label
+
+        if self.label_transformation is not None:
+            target = self.label_transformation.inverse_transform(target)
+            prediction = self.label_transformation.inverse_transform(prediction)
+
+        results = {}
+        for name, func in METRIC_REGISTRY.items():
+            try:
+                results[name] = func(target, prediction)
+            except ValueError:
+                results[name] = float('nan')
+        return results
 
     @staticmethod
     def _evaluate_score(

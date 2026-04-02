@@ -10,6 +10,8 @@ from .preprocess_SNL import SNLPreprocessor
 from .preprocess_UL_PUR import UL_PURPreprocessor
 from .preprocess_arbin import ARBINPreprocessor
 from .preprocess_neware import NEWAREPreprocessor
+from .preprocess_CSV import CSVPreprocessor
+from .csv_importer import CSVBatteryImporter
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
