@@ -99,6 +99,10 @@ class NNModel(BaseModel, nn.Module, abc.ABC):
                 optimizer, patience=patience, factor=factor)
         elif name == 'onecycle':
             max_lr = params.get('max_lr', self.lr)
+            if steps_per_epoch <= 0:
+                raise ValueError(
+                    "OneCycleLR requires steps_per_epoch > 0. "
+                    "Check that the training dataset is not empty.")
             return lr_scheduler.OneCycleLR(
                 optimizer,
                 max_lr=max_lr,
@@ -138,14 +142,14 @@ class NNModel(BaseModel, nn.Module, abc.ABC):
         self._training_history = []
 
         latest = None
-        for epoch in tqdm(range(self.train_epochs), desc='Traning'):
+        for epoch in tqdm(range(self.train_epochs), desc='Training'):
             self.train()
             epoch_loss_sum = 0.0
             epoch_loss_count = 0
 
             for batch in loader:
                 loss = self.forward(**batch, return_loss=True)
-                if loss == torch.inf:
+                if torch.isinf(loss) or torch.isnan(loss):
                     reset_parameters(self)
                     optimizer = optim.Adam(self.parameters(), lr=self.lr)
                     sched = self._build_scheduler(
@@ -209,7 +213,8 @@ class NNModel(BaseModel, nn.Module, abc.ABC):
 
                 # Early stopping check
                 if self.early_stopping:
-                    if eval_loss < best_eval_loss - self.early_stopping_min_delta:
+                    delta = self.early_stopping_min_delta
+                    if eval_loss < best_eval_loss - delta:
                         best_eval_loss = eval_loss
                         epochs_without_improvement = 0
                         # Save best model state
@@ -217,7 +222,8 @@ class NNModel(BaseModel, nn.Module, abc.ABC):
                     else:
                         epochs_without_improvement += 1
 
-                    if epochs_without_improvement >= self.early_stopping_patience:
+                    patience = self.early_stopping_patience
+                    if epochs_without_improvement >= patience:
                         print(
                             f'Early stopping at epoch {epoch+1}: '
                             f'no improvement for '
@@ -232,14 +238,15 @@ class NNModel(BaseModel, nn.Module, abc.ABC):
             self.link_latest_checkpoint(latest)
 
     @torch.no_grad()
-    def predict(self, dataset: DataBundle, data_type: str='test') -> torch.Tensor:
+    def predict(
+        self, dataset: DataBundle, data_type: str = 'test',
+    ) -> torch.Tensor:
         self.eval()
-        # test_data = dataset.test_data
         if data_type == 'test':
             test_data = dataset.test_data
         else:
             test_data = dataset.train_data
-            
+
         loader = DataLoader(
             test_data, self.test_batch_size,
             shuffle=False, worker_init_fn=seed_worker)

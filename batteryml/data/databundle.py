@@ -108,7 +108,10 @@ class DataBundle:
 
         if self.label_transformation is not None:
             target = self.label_transformation.inverse_transform(target)
-            prediction = self.label_transformation.inverse_transform(prediction)
+            prediction = (
+                self.label_transformation
+                .inverse_transform(prediction)
+            )
 
         # New multi-metric path
         if metrics is not None:
@@ -142,8 +145,9 @@ class DataBundle:
             target = self.test_data.label
 
         if self.label_transformation is not None:
-            target = self.label_transformation.inverse_transform(target)
-            prediction = self.label_transformation.inverse_transform(prediction)
+            lt = self.label_transformation
+            target = lt.inverse_transform(target)
+            prediction = lt.inverse_transform(prediction)
 
         results = {}
         for name, func in METRIC_REGISTRY.items():
@@ -165,7 +169,12 @@ class DataBundle:
         elif metric == 'MAE':
             score = torch.mean((target - prediction).abs())
         else:
-            score = torch.abs((target - prediction) / target).mean()
+            nonzero = target != 0
+            if not nonzero.any():
+                return float('inf')
+            score = torch.abs(
+                (target[nonzero] - prediction[nonzero]) / target[nonzero]
+            ).mean()
 
         return float(score)
 

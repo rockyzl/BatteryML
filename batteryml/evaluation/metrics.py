@@ -219,7 +219,7 @@ def explained_variance(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     y_true, y_pred = _filter_nan(y_true, y_pred)
 
     var_true = np.var(y_true)
-    if var_true == 0:
+    if var_true < 1e-15:
         residual_var = np.var(y_true - y_pred)
         return 0.0 if residual_var > 0 else 1.0
 
@@ -255,7 +255,8 @@ def get_metric(name: str):
     """
     key = name.lower()
     if key not in METRIC_REGISTRY:
+        avail = list(METRIC_REGISTRY.keys())
         raise ValueError(
-            f"Unknown metric '{name}'. Available: {list(METRIC_REGISTRY.keys())}. "
-            f"未知指标 '{name}'。可用指标：{list(METRIC_REGISTRY.keys())}。")
+            f"Unknown metric '{name}'. Available: {avail}. "
+            f"未知指标 '{name}'。可用指标：{avail}。")
     return METRIC_REGISTRY[key]

@@ -75,13 +75,14 @@ class ModelExplainer:
     # ------------------------------------------------------------------
 
     def _score(self, features_2d: torch.Tensor) -> float:
-        """Compute the evaluation score given a (possibly permuted) feature matrix.
+        """Compute the evaluation score for a feature matrix.
 
-        A *lower* RMSE / MAE / MAPE is better, so a score *increase* after
-        permutation means the feature was important.
+        A *lower* RMSE/MAE/MAPE is better, so a score
+        *increase* after permutation means the feature
+        was important.
 
         Args:
-            features_2d: Feature tensor of shape (n_samples, n_features).
+            features_2d: Feature tensor (n_samples, n_features).
 
         Returns:
             The scalar evaluation score.
@@ -99,9 +100,14 @@ class ModelExplainer:
             )
 
         try:
-            preds = self.model.predict(self.data_bundle, data_type=self.data_type)
+            preds = self.model.predict(
+                self.data_bundle,
+                data_type=self.data_type,
+            )
             score = self.data_bundle.evaluate(
-                preds, metric=self.metric, data_type=self.data_type
+                preds,
+                metric=self.metric,
+                data_type=self.data_type,
             )
         finally:
             # Restore original features
@@ -116,8 +122,10 @@ class ModelExplainer:
     # Feature name helpers
     # ------------------------------------------------------------------
 
-    def _feature_names(self, feature_names: Optional[List[str]] = None) -> List[str]:
-        """Return feature names, generating defaults if not provided.
+    def _feature_names(
+        self, feature_names: Optional[List[str]] = None,
+    ) -> List[str]:
+        """Return feature names, generating defaults if needed.
 
         Args:
             feature_names: Explicit list of feature names. If ``None``,
@@ -310,8 +318,8 @@ class ModelExplainer:
             result = self.builtin_importance(feature_names=feature_names)
             if result is None:
                 raise ValueError(
-                    "Built-in importance is not available for this model type. "
-                    "Use method='permutation' instead."
+                    "Built-in importance is not available "
+                    "for this model. Use 'permutation'."
                 )
             return result
         elif method == 'shap':
@@ -384,7 +392,7 @@ class ModelExplainer:
         save_path: Optional[str] = None,
         figsize: Tuple[int, int] = (12, 5),
     ):
-        """Plot side-by-side comparison of feature importance from different methods.
+        """Plot side-by-side importance comparison.
 
         并排对比不同方法的特征重要性。
 
@@ -430,11 +438,16 @@ class ModelExplainer:
             ax.set_title(f'{method}')
             ax.grid(axis='x', alpha=0.3)
 
-        fig.suptitle('Feature Importance Comparison', fontsize=14, y=1.02)
+        fig.suptitle(
+            'Feature Importance Comparison',
+            fontsize=14, y=1.02,
+        )
         fig.tight_layout()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=150, bbox_inches='tight')
+            fig.savefig(
+                save_path, dpi=150, bbox_inches='tight',
+            )
 
         plt.close(fig)
         return fig

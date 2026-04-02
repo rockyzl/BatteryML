@@ -15,7 +15,7 @@ import shutil
 import tempfile
 import logging
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import yaml
 
@@ -30,7 +30,7 @@ except ImportError:
         "pip install optuna-dashboard"
     )
 
-from batteryml.pipeline import Pipeline, load_config, build_dataset, set_seed
+from batteryml.pipeline import Pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +210,9 @@ class OptunaTuner:
                 self._set_nested(trial_yaml, dotted_key, value)
 
             # Write trial config to a temporary file
-            trial_dir = tempfile.mkdtemp(prefix=f'optuna_trial_{trial.number}_')
+            trial_dir = tempfile.mkdtemp(
+                prefix=f'optuna_trial_{trial.number}_'
+            )
             self._tmp_dirs.append(Path(trial_dir))
             trial_config_path = Path(trial_dir) / 'trial_config.yaml'
             with open(trial_config_path, 'w', encoding='utf-8') as f:
@@ -253,7 +255,9 @@ class OptunaTuner:
 
         return objective
 
-    def run(self, workspace: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
+    def run(
+        self, workspace: Optional[Union[str, Path]] = None,
+    ) -> Dict[str, Any]:
         """Run the hyperparameter optimization.
 
         Creates an Optuna study and optimizes the objective over the
@@ -320,7 +324,11 @@ class OptunaTuner:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as f:
-            yaml.dump(best_config, f, allow_unicode=True, default_flow_style=False)
+            yaml.dump(
+                best_config, f,
+                allow_unicode=True,
+                default_flow_style=False,
+            )
 
         logger.info("Best config saved to %s", output_path)
 
@@ -426,6 +434,10 @@ class OptunaTuner:
             importances = {}
 
         return importances
+
+    def __del__(self) -> None:
+        """Ensure temporary directories are cleaned up on deletion."""
+        self.cleanup()
 
     def cleanup(self) -> None:
         """Remove all temporary directories created during optimization.

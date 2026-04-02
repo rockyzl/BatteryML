@@ -22,12 +22,12 @@ BatteryML is currently in its alpha stage, published at ICLR 2024. The platform 
 
 **Theme: Improve software quality and user experience / 提升软件质量和用户体验**
 
-- [ ] pytest test framework with coverage target of 30%
-- [ ] GitHub Actions CI/CD pipeline (lint, test, build)
+- [x] pytest test framework with coverage target of 30%
+- [x] GitHub Actions CI/CD pipeline (lint, test, build)
 - [ ] Google Colab one-click demo notebooks
-- [ ] CSV/Excel universal data importer for custom datasets
-- [ ] Multi-dimensional evaluation metrics (MAE / MAPE / R² / MedAE)
-- [ ] Improved error messages and user-friendly exception handling
+- [x] CSV/Excel universal data importer for custom datasets
+- [x] Multi-dimensional evaluation metrics (MAE / MAPE / R² / MedAE)
+- [x] Improved error messages and user-friendly exception handling
 - [ ] Bilingual tutorials in English and Chinese / 中英文双语教程
 - [ ] Type hints across core modules
 - [ ] Automated code formatting with `black` and `isort`
@@ -36,14 +36,14 @@ BatteryML is currently in its alpha stage, published at ICLR 2024. The platform 
 
 **Theme: Complete core ML functionality and visualization / 完善核心ML功能和可视化**
 
-- [ ] Optuna hyperparameter auto-tuning integration
-- [ ] SHAP model interpretability and feature importance analysis
+- [x] Optuna hyperparameter auto-tuning integration
+- [x] SHAP model interpretability and feature importance analysis
 - [ ] K-Fold cross-validation framework
 - [ ] Streamlit Web visualization dashboard
 - [ ] MkDocs official documentation site
 - [ ] Online Benchmark Leaderboard
-- [ ] Learning rate schedulers and early stopping mechanisms
-- [ ] Automated data quality report generation
+- [x] Learning rate schedulers and early stopping mechanisms
+- [x] Automated data quality report generation
 - [ ] SOH (State of Health) prediction model library expansion
 - [ ] Biologic, LANDT, and Indigo cycler support completion
 

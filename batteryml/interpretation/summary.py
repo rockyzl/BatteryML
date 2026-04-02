@@ -1,7 +1,6 @@
 # Licensed under the MIT License.
 # Copyright (c) Microsoft Corporation.
 
-import warnings
 from typing import Dict, List, Optional
 
 from batteryml.interpretation.explainer import ModelExplainer

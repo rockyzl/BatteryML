@@ -4,7 +4,7 @@
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
 
@@ -100,11 +100,15 @@ class DataQualityChecker:
             v = getattr(c, 'voltage_in_V', None) or []
             points_per_cycle.append(len(v))
 
+        ppc = points_per_cycle
         stats = {
             'n_cycles': n_cycles,
-            'points_per_cycle_mean': float(np.mean(points_per_cycle)) if points_per_cycle else 0,
-            'points_per_cycle_min': int(np.min(points_per_cycle)) if points_per_cycle else 0,
-            'points_per_cycle_max': int(np.max(points_per_cycle)) if points_per_cycle else 0,
+            'points_per_cycle_mean': (
+                float(np.mean(ppc)) if ppc else 0),
+            'points_per_cycle_min': (
+                int(np.min(ppc)) if ppc else 0),
+            'points_per_cycle_max': (
+                int(np.max(ppc)) if ppc else 0),
         }
 
         empty_cycles = sum(1 for p in points_per_cycle if p == 0)
@@ -134,22 +138,35 @@ class DataQualityChecker:
         for c in cycles:
             for f in fields:
                 val = getattr(c, f, None)
-                if val is None or (isinstance(val, (list, np.ndarray)) and len(val) == 0):
+                is_empty = (
+                    isinstance(val, (list, np.ndarray))
+                    and len(val) == 0
+                )
+                if val is None or is_empty:
                     missing_counts[f] += 1
 
         n = len(cycles)
         for f, count in missing_counts.items():
             if count > 0:
                 pct = count / n * 100
-                severity = 'error' if pct > 50 else 'warning' if pct > 10 else 'info'
+                if pct > 50:
+                    severity = 'error'
+                elif pct > 10:
+                    severity = 'warning'
+                else:
+                    severity = 'info'
                 issues.append({
                     'severity': severity,
-                    'message': f'{f}: missing in {count}/{n} cycles ({pct:.1f}%)',
+                    'message': (
+                        f'{f}: missing in '
+                        f'{count}/{n} cycles ({pct:.1f}%)'
+                    ),
                 })
 
         total_missing = sum(missing_counts.values())
         total_possible = n * len(fields)
-        score = max(0.0, 100.0 - (total_missing / max(total_possible, 1)) * 100)
+        ratio = total_missing / max(total_possible, 1)
+        score = max(0.0, 100.0 - ratio * 100)
         return {'score': score, 'issues': issues}
 
     def _check_anomalies(self, bd) -> Dict[str, Any]:
@@ -164,13 +181,11 @@ class DataQualityChecker:
         for c in cycles:
             dc = getattr(c, 'discharge_capacity_in_Ah', None) or []
             if isinstance(dc, (list, np.ndarray)) and len(dc) > 0:
-                capacities.append(float(dc[-1]) if len(dc) > 0 else 0.0)
+                capacities.append(float(dc[-1]))
             else:
                 capacities.append(None)
 
         anomaly_count = 0
-        n_valid = sum(1 for c in capacities if c is not None and c > 0)
-
         for i in range(1, len(capacities)):
             prev, curr = capacities[i - 1], capacities[i]
             if prev is None or curr is None or prev == 0:
@@ -184,7 +199,8 @@ class DataQualityChecker:
                         'severity': 'warning',
                         'message': (
                             f'Capacity jump at cycle {i}: '
-                            f'{prev:.4f} -> {curr:.4f} ({change*100:.1f}% change)'
+                            f'{prev:.4f} -> {curr:.4f} '
+                            f'({change*100:.1f}% change)'
                         ),
                     })
 
@@ -202,20 +218,30 @@ class DataQualityChecker:
         if anomaly_count > 5:
             issues.append({
                 'severity': 'warning',
-                'message': f'Total {anomaly_count} capacity anomalies detected '
-                           f'(showing first 5).',
+                'message': (
+                    f'Total {anomaly_count} capacity '
+                    f'anomalies detected (first 5).'
+                ),
             })
 
         # Zero capacity cycles
-        zero_caps = sum(1 for c in capacities if c is not None and c == 0)
+        zero_caps = sum(
+            1 for c in capacities if c is not None and c == 0
+        )
         if zero_caps > 0:
             issues.append({
                 'severity': 'error',
-                'message': f'{zero_caps} cycle(s) with zero discharge capacity.',
+                'message': (
+                    f'{zero_caps} cycle(s) with zero '
+                    f'discharge capacity.'
+                ),
             })
 
         n_total = len(capacities)
-        score = max(0.0, 100.0 - (anomaly_count + zero_caps) / max(n_total, 1) * 100)
+        bad = anomaly_count + zero_caps
+        score = max(
+            0.0, 100.0 - bad / max(n_total, 1) * 100
+        )
         return {'score': score, 'issues': issues}
 
     def _check_consistency(self, bd) -> Dict[str, Any]:
@@ -253,15 +279,20 @@ class DataQualityChecker:
                 if not v:
                     continue
                 v_arr = np.array(v, dtype=float)
-                if v_min_limit is not None and np.any(v_arr < v_min_limit - 0.1):
-                    violations += 1
-                if v_max_limit is not None and np.any(v_arr > v_max_limit + 0.1):
-                    violations += 1
+                if v_min_limit is not None:
+                    if np.any(v_arr < v_min_limit - 0.1):
+                        violations += 1
+                if v_max_limit is not None:
+                    if np.any(v_arr > v_max_limit + 0.1):
+                        violations += 1
 
         if violations > 0:
             issues.append({
                 'severity': 'warning',
-                'message': f'{violations} cycle(s) have voltage outside nominal limits.',
+                'message': (
+                    f'{violations} cycle(s) have voltage '
+                    f'outside nominal limits.'
+                ),
             })
 
         score = max(0.0, 100.0 - len(issues) * 10)
@@ -292,7 +323,8 @@ class DataQualityChecker:
                         f'first differences = {avg_noise:.6f} V'
                     ),
                 })
-            score = max(0.0, 100.0 - max(0, avg_noise - self.noise_std_threshold) * 10000)
+            excess = max(0, avg_noise - self.noise_std_threshold)
+            score = max(0.0, 100.0 - excess * 10000)
         else:
             score = 100.0
 

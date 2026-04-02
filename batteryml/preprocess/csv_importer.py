@@ -1,7 +1,6 @@
 # Licensed under the MIT License.
 # Copyright (c) Microsoft Corporation.
 
-import os
 import re
 import logging
 from pathlib import Path
@@ -437,8 +436,8 @@ class CSVBatteryImporter:
                     col_name = self.column_mapping.get(field)
                     if col_name and col_name in cycle_df.columns:
                         values = cycle_df[col_name].values
-                        kwargs[kwarg_name] = np.where(
-                            np.isnan(values), 0.0, values
+                        kwargs[kwarg_name] = np.nan_to_num(
+                            values, nan=0.0
                         ).tolist()
 
                 cycles.append(CycleData(
