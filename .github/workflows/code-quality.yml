@@ -1,0 +1,39 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, master, 'claude/**' ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  flake8:
+    name: flake8 lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - run: pip install flake8
+      - run: flake8 batteryml/ --count --max-line-length=120 --statistics
+
+  check-license-headers:
+    name: Check license headers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Microsoft license headers
+        run: |
+          echo "Checking for Microsoft license headers in Python files..."
+          missing=0
+          for f in $(find batteryml/ -name "*.py" ! -name "__init__.py"); do
+            if ! head -3 "$f" | grep -q "Microsoft Corporation"; then
+              echo "MISSING header: $f"
+              missing=$((missing + 1))
+            fi
+          done
+          if [ $missing -gt 0 ]; then
+            echo "::warning::$missing file(s) missing Microsoft license header"
+          fi
+          echo "License header check complete."
