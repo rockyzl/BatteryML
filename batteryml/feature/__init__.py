@@ -7,3 +7,4 @@ from .variance_model import VarianceModelFeatureExtractor
 from .discharge_model import DischargeModelFeatureExtractor
 from .voltage_capacity_matrix import VoltageCapacityMatrixFeatureExtractor
 from .coulombic_efficiency import CoulombicEfficiencyFeatureExtractor
+from .dqdv import dQdVFeatureExtractor

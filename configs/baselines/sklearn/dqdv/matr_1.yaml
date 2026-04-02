@@ -1,0 +1,21 @@
+model:
+    name: 'LinearRegressionRULPredictor'
+train_test_split:
+    name: 'MATRPrimaryTestTrainTestSplitter'
+    cell_data_path: 'data/processed/MATR'
+feature:
+    name: 'dQdVFeatureExtractor'
+    interp_dim: 1000
+    sg_window: 51
+    sg_polyorder: 3
+    ref_cycle: 9
+    eval_cycle: 99
+label:
+    name: 'RULLabelAnnotator'
+feature_transformation:
+    name: 'ZScoreDataTransformation'
+label_transformation:
+    name: 'SequentialDataTransformation'
+    transformations:
+        - name: 'LogScaleDataTransformation'
+        - name: 'ZScoreDataTransformation'
