@@ -16,6 +16,8 @@ from .feature import (
     DischargeModelFeatureExtractor,
     FullModelFeatureExtractor,
     VoltageCapacityMatrixFeatureExtractor,
+    CoulombicEfficiencyFeatureExtractor,  # noqa: F401
+    dQdVFeatureExtractor,  # noqa: F401
 )
 from .label import RULLabelAnnotator
 from .train_test_split import (
