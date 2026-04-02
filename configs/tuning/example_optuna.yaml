@@ -1,0 +1,30 @@
+# Example Optuna hyperparameter tuning configuration for BatteryML.
+#
+# Usage:
+#   from batteryml.tuning import OptunaTuner
+#   import yaml
+#
+#   with open('configs/tuning/example_optuna.yaml') as f:
+#       tuning_cfg = yaml.safe_load(f)['tuning']
+#
+#   tuner = OptunaTuner(
+#       config_path='configs/baselines/nn_models/mlp/matr_1.yaml',
+#       search_space={
+#           k: tuple(v) for k, v in tuning_cfg['search_space'].items()
+#       },
+#       metric=tuning_cfg['metric'],
+#       direction=tuning_cfg['direction'],
+#       n_trials=tuning_cfg['n_trials'],
+#   )
+#   best_params = tuner.run()
+#   tuner.save_best_config('best_config.yaml')
+
+tuning:
+  n_trials: 50
+  metric: RMSE
+  direction: minimize
+  search_space:
+    model.lr: [log_uniform, 0.00001, 0.1]
+    model.batch_size: [categorical, [16, 32, 64, 128]]
+    model.epochs: [int, 10, 200]
+    model.channels: [int, 16, 256]

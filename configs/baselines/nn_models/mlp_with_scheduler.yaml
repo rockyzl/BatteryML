@@ -1,0 +1,30 @@
+model:
+    name: 'MLPRULPredictor'
+    in_channels: 1
+    channels: 32
+    input_height: 1
+    input_width: 1000
+    epochs: 200
+    batch_size: 32
+    evaluate_freq: 10
+    learning_rate: 0.001
+    scheduler: 'cosine'
+    early_stopping: true
+    early_stopping_patience: 20
+    gradient_clip_val: 1.0
+train_test_split:
+    name: 'MATRPrimaryTestTrainTestSplitter'
+    cell_data_path: 'data/processed/MATR'
+feature:
+    name: 'VoltageCapacityMatrixFeatureExtractor'
+    diff_base: 9
+    cycles_to_keep: 99
+    max_cycle_index: 99
+    use_precalculated_qdlin: True
+label:
+    name: 'RULLabelAnnotator'
+label_transformation:
+    name: 'SequentialDataTransformation'
+    transformations:
+        - name: 'LogScaleDataTransformation'
+        - name: 'ZScoreDataTransformation'
