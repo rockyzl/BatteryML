@@ -30,4 +30,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST.claude/
+MANIFEST
+
+# Claude Code working directory
+.claude/
