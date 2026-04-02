@@ -1,0 +1,18 @@
+model:
+    name: 'LinearRegressionRULPredictor'
+train_test_split:
+    name: 'MATRPrimaryTestTrainTestSplitter'
+    cell_data_path: 'data/processed/MATR'
+feature:
+    name: 'CoulombicEfficiencyFeatureExtractor'
+    early_cycles_n: 5
+    reference_cycle: 9
+label:
+    name: 'RULLabelAnnotator'
+feature_transformation:
+    name: 'ZScoreDataTransformation'
+label_transformation:
+    name: 'SequentialDataTransformation'
+    transformations:
+        - name: 'LogScaleDataTransformation'
+        - name: 'ZScoreDataTransformation'
